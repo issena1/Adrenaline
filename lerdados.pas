@@ -4,7 +4,7 @@ interface
 
 uses SysUtils, Classes;
 
-var SKILL_ID: Integer   = 1177;//(Window Wind) ID da skill a ser usada no combate (defina como -1 para usar ataque básico)
+var SKILL_ID: Integer   = 1177;//ID da skill a ser usada no combate (defina como -1 para usar ataque básico)
 
 procedure SeguirCaminhoGravado(NomeArquivo: string);
 
@@ -327,5 +327,6 @@ begin
 
   if Chegou then Print('>>> GPS: [OK] Percurso concluido.') else Print('>>> GPS: [FALHA] Abortando.');
 end;
+
 
 end.
