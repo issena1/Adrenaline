@@ -1,0 +1,78 @@
+uses  Classes, GPS, questfarm, lerdados, bypass, SysUtils;
+var
+i: integer;
+
+procedure ListarMinhasSkills;
+var
+  i: Integer;
+begin
+  // Atualiza a lista de skills para garantir que novas skills ou mudanças apareçam (Pág. 11)
+  Engine.UpdateSkillList; 
+  
+  Print('>>> [SCAN] Iniciando listagem de habilidades...');
+  
+  // SkillList.Count retorna a quantidade total de skills
+  for i := 0 to SkillList.Count - 1 do
+  begin
+    // SkillList.Items(i) acessa a skill na posição i
+    Print('Skill: ' + SkillList.Items(i).Name + ' | ID: ' + IntToStr(SkillList.Items(i).ID));
+  end;
+  
+  Print('>>> [SCAN] Fim da listagem. Total: ' + IntToStr(SkillList.Count));
+end;
+begin
+   
+  SeguirCaminhoGravado('Rosella.txt');
+  NPCManager.QuestRosella();
+  SeguirCaminhoGravado('Greenis.txt');
+  NPCManager.QuestGreenis();
+  SeguirCaminhoGravado('Mirabel.txt');
+  NPCManager.QuestMirabel;
+  NPCManager.AguardarTeleporte(20);
+  SeguirCaminhoGravado('farm1.txt');
+  FarmarComFaceControl('Red Down', 5);
+  SeguirCaminhoGravado('ElevenCenter.txt');
+  SeguirCaminhoGravado('Greenis2.txt');
+  NPCManager.QuestGreenis();
+  SeguirCaminhoGravado('Rosella2.txt');
+  NPCManager.QuestRosella();
+  SeguirCaminhoGravado('Mirabel2.txt');
+  NPCManager.Interagir('Teleport Device', 1, 6, 10);
+  NPCManager.AguardarTeleporte(20);
+  SeguirCaminhoGravado('Thalia.txt');
+  NPCManager.QuestThalia();
+  unstuck();
+  SeguirCaminhoGravado('UnstckToMaribel.txt');
+  NPCManager.Interagir('Teleport Device', 1, 5, 0);
+  NPCManager.AguardarTeleporte(20);
+  SeguirCaminhoGravado('farmgold.txt');
+  FarmarComFaceControl('Gold Leaves', 5);
+  SeguirCaminhoGravado('UnstckToMaribel.txt');
+  NPCManager.Interagir('Teleport Device', 1, 6, 0);
+  NPCManager.AguardarTeleporte(20);
+  SeguirCaminhoGravado('Thalia.txt');
+  NPCManager.QuestThalia();
+  unstuck();
+  SeguirCaminhoGravado('ElevenCenter.txt');
+  SeguirCaminhoGravado('Rosella3.txt');
+  NPCManager.QuestRosella;
+  SeguirCaminhoGravado('Mirabel4.txt');
+  NPCManager.Interagir('Teleport Device', 1, 6, 0);
+  NPCManager.AguardarTeleporte(20);
+  NPCManager.Interagir('Northwind', 2, 1, 0);
+  SeguirCaminhoGravado('Finale.txt');
+  FarmarComFaceControl('Amethyst', 2);
+  SeguirCaminhoGravado('UnstckToMaribel.txt');
+  NPCManager.Interagir('Teleport Device', 1, 6, 0);
+  NPCManager.AguardarTeleporte(20);
+  NPCManager.Interagir('Northwind', 2, 1, 0);
+  unstuck();
+  SeguirCaminhoGravado('UnstckToMaribel.txt');
+  SeguirCaminhoGravado('Rosella.txt');
+  NPCManager.QuestRosella;
+  
+   {
+   GRecorder.Iniciar();
+   while True do Delay(10000);
+    }
+end.
