@@ -6,7 +6,7 @@ procedure ListarMinhasSkills;
 var
   i: Integer;
 begin
-  // Atualiza a lista de skills para garantir que novas skills ou mudanças apareçam (Pág. 11)
+  // Atualiza a lista de skills para garantir que novas skills ou mudanÃ§as apareÃ§am (PÃ¡g. 11)
   Engine.UpdateSkillList; 
   
   Print('>>> [SCAN] Iniciando listagem de habilidades...');
@@ -14,13 +14,17 @@ begin
   // SkillList.Count retorna a quantidade total de skills
   for i := 0 to SkillList.Count - 1 do
   begin
-    // SkillList.Items(i) acessa a skill na posição i
+    // SkillList.Items(i) acessa a skill na posiÃ§Ã£o i
     Print('Skill: ' + SkillList.Items(i).Name + ' | ID: ' + IntToStr(SkillList.Items(i).ID));
   end;
   
   Print('>>> [SCAN] Fim da listagem. Total: ' + IntToStr(SkillList.Count));
 end;
 begin
+
+  //Escolher Skil para usar (-1 para ataques)
+  //1177 Ventinho
+  SKILL_ID := 1177;
    
   SeguirCaminhoGravado('Rosella.txt');
   NPCManager.QuestRosella();
@@ -76,3 +80,4 @@ begin
    while True do Delay(10000);
     }
 end.
+
