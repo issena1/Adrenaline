@@ -16,7 +16,7 @@ type
     function ClicarBypass(Indice: Integer): Boolean;
     procedure AguardarTeleporte(TimeoutSegundos: Integer);
     procedure Interagir(NomeNPC: string; P1: Integer; P2: Integer; P3: Integer);
-    
+    procedure setMemoriaPosicaoAtual; // Método para atualizar a memória com a posição atual do personagem
     procedure QuestRosella;
     procedure QuestGreenis;
     procedure QuestMirabel;
@@ -37,6 +37,18 @@ end;
 destructor TNPCManager.Destroy;
 begin
   inherited Destroy;
+end;
+
+procedure TNPCManager.setMemoriaPosicaoAtual;
+var
+  LUser: TL2User;
+begin
+  LUser := Engine.GetUser;
+  if LUser <> nil then begin
+    FMemX := LUser.X;
+    FMemY := LUser.Y;
+    FMemZ := LUser.Z;
+  end;
 end;
 
 function TNPCManager.ClicarBypass(Indice: Integer): Boolean;
@@ -170,7 +182,7 @@ begin
       until (Engine.DlgText <> S) or (Engine.DlgText = '') or (Tentativas > 10);
     end;
   end;
-
+  Delay(500);
   if (P2 > 0) and (Engine.DlgText <> '') then begin
     S := Engine.DlgText;
     if ClicarBypass(P2) then begin
