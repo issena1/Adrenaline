@@ -15,6 +15,7 @@ type
     FLastHeartbeat: Cardinal;
     FEstavaMovendo: Boolean;
     FSalvarPendente: Boolean; // sinaliza para a thread salvar no próximo ciclo
+    FDistanciaMinima: Double;
     function FormatarPonto(x, y, z: Integer; Motivo: string): string;
   public
     constructor Create;
@@ -24,6 +25,7 @@ type
     procedure SalvarNoDisco;
     procedure ExecutarLoop;
     property Capturando: Boolean read FCapturando;
+    procedure SetDistanciaMinima(Dist: Double);
   end;
 
 var
@@ -48,6 +50,7 @@ begin
   FSalvarPendente := False;
   FLastHeartbeat := 0;
   FEstavaMovendo := False;
+  FDistanciaMinima := 200; // distância mínima para registrar um ponto de caminho
 end;
 
 destructor TGPSRecorder.Destroy;
@@ -59,6 +62,11 @@ begin
     FBufferPontos := nil;
   end;
   inherited Destroy;
+end;
+
+procedure TGPSRecorder.SetDistanciaMinima(Dist: Double);
+begin
+  FDistanciaMinima := Dist;
 end;
 
 function TGPSRecorder.FormatarPonto(x, y, z: Integer; Motivo: string): string;
@@ -182,7 +190,7 @@ begin
     end;
 
     // ── 2. CAMINHO ──
-    if MovendoAgora and (Dist > 150) then begin
+    if MovendoAgora and (Dist > FDistanciaMinima) then begin
       FBufferPontos.Add(FormatarPonto(cx, cy, cz, 'CAMINHO'));
       FLastX := cx;
       FLastY := cy;
@@ -199,8 +207,12 @@ end;
 
 procedure TGPSRecorder.SalvarNoDisco;
 var
-  ListaTemp, Copia: TStringList;
+  Copia: TStringList;
+  Stream: TFileStream;
+  Bloco: AnsiString;
+  i: Integer;
 begin
+  // Guards preservados
   if FSalvando then Exit;
   if (FBufferPontos = nil) or (FBufferPontos.Count = 0) then Exit;
   if FArquivoDestino = '' then Exit;
@@ -208,27 +220,37 @@ begin
   FSalvando := True;
   Copia := TStringList.Create;
   try
+    // Padrão de buffer preservado: copia e libera imediatamente
     Copia.AddStrings(FBufferPontos);
     FBufferPontos.Clear;
 
-    ListaTemp := TStringList.Create;
+    // Monta um bloco único com todos os pontos — uma string, um Write
+    Bloco := '';
+    for i := 0 to Copia.Count - 1 do
+      Bloco := Bloco + AnsiString(Copia[i]) + #13#10;
+
     try
+      if FileExists(FArquivoDestino) then
+        Stream := TFileStream.Create(FArquivoDestino, fmOpenWrite or fmShareDenyNone)
+      else
+        Stream := TFileStream.Create(FArquivoDestino, fmCreate);
       try
-        if FileExists(FArquivoDestino) then
-          ListaTemp.LoadFromFile(FArquivoDestino);
-        ListaTemp.AddStrings(Copia);
-        ListaTemp.SaveToFile(FArquivoDestino);
-      except
-        FBufferPontos.AddStrings(Copia); // restaura se falhou
+        Stream.Position := Stream.Size;        // Append sem ler o arquivo
+        Stream.Write(Bloco[1], Length(Bloco)); // Todos os pontos de uma vez
+      finally
+        Stream.Free;
       end;
-    finally
-      ListaTemp.Free;
+    except
+      // Lógica de restauração preservada: pontos voltam ao buffer se falhar
+      FBufferPontos.AddStrings(Copia);
     end;
+
   finally
     Copia.Free;
     FSalvando := False;
   end;
 end;
+
 
 procedure TGPSRecorder.Parar;
 var
