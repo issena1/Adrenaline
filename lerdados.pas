@@ -6,7 +6,7 @@ uses SysUtils, Classes;
 
 var SKILL_ID: Integer = 1177;
 
-procedure SeguirCaminhoGravado(NomeArquivo: string);
+function SeguirCaminhoGravado(NomeArquivo: string): Boolean;
 
 implementation
 
@@ -124,7 +124,7 @@ end;
 
 // --- LÓGICA PRINCIPAL ---
 
-procedure SeguirCaminhoGravado(NomeArquivo: string);
+function SeguirCaminhoGravado(NomeArquivo: string): Boolean;
 var
   Tudo              : TPontoArray;
   i                 : Integer;
@@ -141,12 +141,13 @@ var
   InimigoDet        : TL2Live;
   LastX, LastY      : Integer;
 begin
+  Result := False; // Assume falha até provar o contrário
+
   if CarregarPontos(LocalizarArquivo(NomeArquivo), Tudo) = 0 then begin
     Print('>>> GPS: Erro ao carregar arquivo ou arquivo vazio.');
-    Exit;
+    Exit; // Result = False
   end;
 
-  // 1. PONTO MAIS PRÓXIMO EM TODOS OS BLOCOS DO ARQUIVO
   IndiceAtual := -1;
   MenorDist   := 999999;
   for i := 0 to High(Tudo) do begin
@@ -159,14 +160,12 @@ begin
 
   if IndiceAtual = -1 then begin
     Print('>>> GPS: Personagem longe de qualquer rota.');
-    Exit;
+    Exit; // Result = False
   end;
 
-  // 2. IDENTIFICA E TRAVA NO BLOCO DO PONTO MAIS PRÓXIMO
   BlocoAtivo     := Tudo[IndiceAtual].ID_Bloco;
   IndiceFimBloco := IndiceAtual;
 
-  // Varre para frente para encontrar o último ponto do bloco
   for i := IndiceAtual to High(Tudo) do begin
     if Tudo[i].ID_Bloco = BlocoAtivo then
       IndiceFimBloco := i
@@ -178,7 +177,6 @@ begin
         ' | Ponto inicial: ' + IntToStr(IndiceAtual) +
         ' | Ponto final: '   + IntToStr(IndiceFimBloco));
 
-  // 3. INICIALIZAÇÃO (tudo antes do loop)
   LastX             := User.X;
   LastY             := User.Y;
   UltimoAlvoEnviado := -1;
@@ -186,15 +184,12 @@ begin
   TickMove          := GetTickCount;
   TickLog           := GetTickCount;
 
-  // 4. LOOP RESTRITO AO BLOCO ATIVO
   while (IndiceAtual <= IndiceFimBloco) and (not User.Dead) do begin
 
-    // COMBATE
     if Engine.FindEnemy(InimigoDet, User, 800) then begin
       AguardarFimDeCombate;
-      if User.Dead then Continue; // while-condition falha → sai limpo
+      if User.Dead then Continue;
 
-      // Re-ancora dentro do bloco ativo
       MenorDist := 999999;
       for i := 0 to High(Tudo) do begin
         if Tudo[i].ID_Bloco <> BlocoAtivo then Continue;
@@ -206,16 +201,13 @@ begin
       end;
       UltimoAlvoEnviado := -1;
       TickStuck := GetTickCount;
-      // ✅ CORREÇÃO: reseta posição de referência após combate
       LastX := User.X;
       LastY := User.Y;
     end;
 
-    // CÁLCULO DO ALVO (limitado ao fim do bloco)
     AlvoIdx := CalcularAlvoOtimizado(Tudo, IndiceAtual, IndiceFimBloco);
     Dist    := User.DistTo(Tudo[AlvoIdx].X, Tudo[AlvoIdx].Y, Tudo[AlvoIdx].Z);
 
-    // ENVIO DE MOVIMENTO
     if (AlvoIdx <> UltimoAlvoEnviado) or (not User.Moved)
     or (GetTickCount - TickMove > 5000) then begin
       Engine.DMoveTo(Tudo[AlvoIdx].X, Tudo[AlvoIdx].Y, Tudo[AlvoIdx].Z);
@@ -223,7 +215,6 @@ begin
       TickMove          := GetTickCount;
     end;
 
-    // ANTI-STUCK (por posição real, não por distância)
     if (Abs(User.X - LastX) > 15) or (Abs(User.Y - LastY) > 15) then begin
       LastX     := User.X;
       LastY     := User.Y;
@@ -236,14 +227,12 @@ begin
       UltimoAlvoEnviado := -1;
     end;
 
-    // TRANSIÇÃO DE PONTOS
     if Tudo[AlvoIdx].EhParada then begin
       if Dist < RAIO_PARADA then IndiceAtual := AlvoIdx + 1;
     end else begin
       if Dist < RAIO_FLUIDO then IndiceAtual := AlvoIdx + 1;
     end;
 
-    // LOG A CADA 1 SEGUNDO
     if GetTickCount - TickLog > 1000 then begin
       Print('>>> GPS: Bloco[' + IntToStr(BlocoAtivo) + '] ' +
             IntToStr(AlvoIdx) + '/' + IntToStr(IndiceFimBloco) +
@@ -254,10 +243,14 @@ begin
     Delay(30);
   end;
 
-  if not User.Dead then
-    Print('>>> GPS: Fim do bloco ' + IntToStr(BlocoAtivo) + ' alcancado.')
-  else
+  // Só chega aqui saindo do while
+  if User.Dead then begin
     Print('>>> GPS: Rota interrompida por morte.');
+    Result := False; // Já é False, mas deixa explícito
+  end else begin
+    Print('>>> GPS: Fim do bloco ' + IntToStr(BlocoAtivo) + ' alcancado.');
+    Result := True; 
+  end;
 end;
 
 end.
