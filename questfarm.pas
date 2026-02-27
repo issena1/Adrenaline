@@ -33,6 +33,7 @@ begin
   begin
     Print('>>> Voce ja possui os itens necessarios.');
     Engine.FaceControl(0, False);
+    if ItemNome = 'Resonance Amulet: 2' then Exit; //Amuleto de ressonancia é da 3job
     unstuck();
     Exit;
   end;
@@ -54,7 +55,15 @@ begin
   
   LUser := Engine.GetUser;
   if (LUser <> nil) and (not LUser.Dead) then
-    unstuck()
+  begin
+    if ItemNome = 'Resonance Amulet: 2' then begin
+      Print('>>> Amuleto de Ressonancia coletado! Parando o bot e aguardando proximo passo da quest...');
+      exit;
+    end
+    else
+      Print('>>> Farm concluido! Aguardando proximo passo da quest...');
+    unstuck();
+  end
   else
     Print('>>> Farm interrompido (Morte ou Desconexao).');
 end;
